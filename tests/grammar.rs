@@ -80,10 +80,7 @@ async fn detects_repeated_words() {
         None => panic!("Response missing matches array"),
     };
 
-    assert!(
-        !matches.is_empty(),
-        "Should detect repeated word 'the the'"
-    );
+    assert!(!matches.is_empty(), "Should detect repeated word 'the the'");
 }
 
 #[tokio::test]
@@ -98,10 +95,7 @@ async fn detects_multiple_grammar_errors() {
         None => panic!("Response missing matches array"),
     };
 
-    assert!(
-        matches.len() >= 2,
-        "Should detect multiple grammar errors"
-    );
+    assert!(matches.len() >= 2, "Should detect multiple grammar errors");
 }
 
 #[tokio::test]
@@ -247,10 +241,7 @@ async fn error_has_message() {
         None => panic!("Missing message in error"),
     };
 
-    assert!(
-        !message.is_empty(),
-        "Error message should not be empty"
-    );
+    assert!(!message.is_empty(), "Error message should not be empty");
 }
 
 #[tokio::test]
@@ -274,8 +265,5 @@ async fn error_has_rule_id() {
         None => panic!("Missing rule id in error"),
     };
 
-    assert!(
-        !rule_id.is_empty(),
-        "Rule ID should not be empty"
-    );
+    assert!(!rule_id.is_empty(), "Rule ID should not be empty");
 }

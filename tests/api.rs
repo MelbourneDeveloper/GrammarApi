@@ -150,10 +150,7 @@ async fn error_has_rule_object() {
     assert!(!matches.is_empty(), "Should have at least one match");
 
     let error = &matches[0];
-    assert!(
-        error["rule"].is_object(),
-        "Error should have rule object"
-    );
+    assert!(error["rule"].is_object(), "Error should have rule object");
 }
 
 #[tokio::test]
@@ -171,10 +168,7 @@ async fn rule_has_id() {
     assert!(!matches.is_empty(), "Should have at least one match");
 
     let error = &matches[0];
-    assert!(
-        error["rule"]["id"].is_string(),
-        "Rule should have id"
-    );
+    assert!(error["rule"]["id"].is_string(), "Rule should have id");
 }
 
 #[tokio::test]
@@ -286,10 +280,7 @@ async fn error_has_offset() {
     assert!(!matches.is_empty(), "Should have at least one match");
 
     let error = &matches[0];
-    assert!(
-        error["offset"].is_number(),
-        "Error should have offset"
-    );
+    assert!(error["offset"].is_number(), "Error should have offset");
 }
 
 #[tokio::test]
@@ -307,10 +298,7 @@ async fn error_has_length() {
     assert!(!matches.is_empty(), "Should have at least one match");
 
     let error = &matches[0];
-    assert!(
-        error["length"].is_number(),
-        "Error should have length"
-    );
+    assert!(error["length"].is_number(), "Error should have length");
 }
 
 #[tokio::test]
@@ -328,8 +316,5 @@ async fn error_has_message() {
     assert!(!matches.is_empty(), "Should have at least one match");
 
     let error = &matches[0];
-    assert!(
-        error["message"].is_string(),
-        "Error should have message"
-    );
+    assert!(error["message"].is_string(), "Error should have message");
 }

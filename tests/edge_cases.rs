@@ -114,10 +114,7 @@ async fn handles_numbers() {
         None => panic!("Response missing matches array"),
     };
 
-    assert!(
-        matches.is_empty(),
-        "Numbers should not trigger errors"
-    );
+    assert!(matches.is_empty(), "Numbers should not trigger errors");
 }
 
 #[tokio::test]
@@ -140,10 +137,7 @@ async fn handles_urls() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle URLs"
-    );
+    assert!(result["matches"].is_array(), "Should handle URLs");
 }
 
 #[tokio::test]
@@ -166,10 +160,7 @@ async fn handles_emoji() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle emoji"
-    );
+    assert!(result["matches"].is_array(), "Should handle emoji");
 }
 
 #[tokio::test]
@@ -197,10 +188,7 @@ async fn handles_newlines() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle newlines"
-    );
+    assert!(result["matches"].is_array(), "Should handle newlines");
 }
 
 #[tokio::test]
@@ -210,10 +198,7 @@ async fn handles_tabs() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle tabs"
-    );
+    assert!(result["matches"].is_array(), "Should handle tabs");
 }
 
 #[tokio::test]
@@ -223,10 +208,7 @@ async fn handles_mixed_case() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle mixed case"
-    );
+    assert!(result["matches"].is_array(), "Should handle mixed case");
 }
 
 #[tokio::test]
@@ -236,10 +218,7 @@ async fn handles_all_caps() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle all caps"
-    );
+    assert!(result["matches"].is_array(), "Should handle all caps");
 }
 
 #[tokio::test]
@@ -249,10 +228,7 @@ async fn handles_all_lowercase() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle all lowercase"
-    );
+    assert!(result["matches"].is_array(), "Should handle all lowercase");
 }
 
 #[tokio::test]
@@ -275,10 +251,7 @@ async fn handles_quoted_text() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle quoted text"
-    );
+    assert!(result["matches"].is_array(), "Should handle quoted text");
 }
 
 #[tokio::test]
@@ -306,10 +279,7 @@ async fn handles_brackets() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle brackets"
-    );
+    assert!(result["matches"].is_array(), "Should handle brackets");
 }
 
 #[tokio::test]
@@ -373,10 +343,7 @@ async fn handles_possessives() {
         None => panic!("Response missing matches array"),
     };
 
-    assert!(
-        matches.is_empty(),
-        "Possessives should not trigger errors"
-    );
+    assert!(matches.is_empty(), "Possessives should not trigger errors");
 }
 
 #[tokio::test]
@@ -386,10 +353,7 @@ async fn handles_ordinals() {
         Err(e) => panic!("Request failed: {}", e),
     };
 
-    assert!(
-        result["matches"].is_array(),
-        "Should handle ordinals"
-    );
+    assert!(result["matches"].is_array(), "Should handle ordinals");
 }
 
 #[tokio::test]
@@ -404,10 +368,7 @@ async fn handles_dates() {
         None => panic!("Response missing matches array"),
     };
 
-    assert!(
-        matches.is_empty(),
-        "Dates should not trigger errors"
-    );
+    assert!(matches.is_empty(), "Dates should not trigger errors");
 }
 
 #[tokio::test]
@@ -422,10 +383,7 @@ async fn handles_times() {
         None => panic!("Response missing matches array"),
     };
 
-    assert!(
-        matches.is_empty(),
-        "Times should not trigger errors"
-    );
+    assert!(matches.is_empty(), "Times should not trigger errors");
 }
 
 #[tokio::test]
@@ -440,8 +398,5 @@ async fn offset_calculation_with_unicode() {
         None => panic!("Response missing matches array"),
     };
 
-    assert!(
-        !matches.is_empty(),
-        "Should detect error after unicode"
-    );
+    assert!(!matches.is_empty(), "Should detect error after unicode");
 }

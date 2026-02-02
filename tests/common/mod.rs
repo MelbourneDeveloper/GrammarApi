@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use axum::{
     body::Body,
     http::{Request, StatusCode},
@@ -36,7 +38,12 @@ pub async fn post_check(text: &str) -> Result<Value, String> {
     }
 }
 
-pub async fn post_check_with_options(text: &str, language: &str, spelling: bool, grammar: bool) -> Result<Value, String> {
+pub async fn post_check_with_options(
+    text: &str,
+    language: &str,
+    spelling: bool,
+    grammar: bool,
+) -> Result<Value, String> {
     let app = create_app();
 
     let payload = json!({

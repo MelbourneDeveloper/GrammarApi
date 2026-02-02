@@ -57,7 +57,10 @@ async fn suggests_replacement_for_common_typo() {
     };
 
     let spelling_errors = find_spelling_errors(matches);
-    assert!(!spelling_errors.is_empty(), "Should detect 'recieved' error");
+    assert!(
+        !spelling_errors.is_empty(),
+        "Should detect 'recieved' error"
+    );
 
     let error = spelling_errors[0];
     match error["replacements"].as_array() {
@@ -103,10 +106,7 @@ async fn detects_missing_letters() {
     };
 
     let spelling_errors = find_spelling_errors(matches);
-    assert!(
-        spelling_errors.len() >= 2,
-        "Should detect missing letters"
-    );
+    assert!(spelling_errors.len() >= 2, "Should detect missing letters");
 }
 
 #[tokio::test]
@@ -225,7 +225,7 @@ async fn provides_multiple_suggestions() {
     let error = spelling_errors[0];
     if let Some(replacements) = error["replacements"].as_array() {
         assert!(
-            replacements.len() >= 1,
+            !replacements.is_empty(),
             "Should provide at least one suggestion"
         );
     } else {
