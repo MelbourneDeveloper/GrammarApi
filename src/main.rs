@@ -150,14 +150,8 @@ async fn health() -> &'static str {
     "ok"
 }
 
-#[tokio::main]
-async fn main() {
-    tracing_subscriber::fmt::init();
-
-    tracing::info!("Loading dictionary...");
+pub fn create_app() -> Router {
     let dictionary = FstDictionary::curated();
-    tracing::info!("Dictionary loaded");
-
     let state = AppState { dictionary };
 
     let cors = CorsLayer::new()
@@ -165,11 +159,20 @@ async fn main() {
         .allow_methods(Any)
         .allow_headers(Any);
 
-    let app = Router::new()
+    Router::new()
         .route("/v1/check", post(check_text))
         .route("/health", axum::routing::get(health))
         .layer(cors)
-        .with_state(state);
+        .with_state(state)
+}
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
+
+    tracing::info!("Loading dictionary...");
+    let app = create_app();
+    tracing::info!("Dictionary loaded");
 
     let addr = "0.0.0.0:8080";
     tracing::info!("Starting server on {}", addr);
