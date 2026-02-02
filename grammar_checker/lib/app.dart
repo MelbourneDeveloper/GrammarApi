@@ -7,11 +7,14 @@ import 'package:provider/provider.dart';
 /// The main application widget.
 class GrammarCheckerApp extends StatelessWidget {
   /// Creates a new [GrammarCheckerApp] instance.
-  const GrammarCheckerApp({super.key});
+  const GrammarCheckerApp({super.key, this.loadSample = true});
+
+  /// Whether to load sample text on startup.
+  final bool loadSample;
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (_) => GrammarCheckProvider(),
+        create: (_) => GrammarCheckProvider(loadSample: loadSample),
         child: MaterialApp(
           title: 'Inkwell',
           debugShowCheckedModeBanner: false,

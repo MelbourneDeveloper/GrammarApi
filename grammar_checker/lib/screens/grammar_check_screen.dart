@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:grammar_checker/providers/grammar_check_provider.dart';
 import 'package:grammar_checker/theme/app_colors.dart';
 import 'package:grammar_checker/widgets/error_list.dart';
-import 'package:grammar_checker/widgets/gradient_button.dart';
 import 'package:grammar_checker/widgets/score_badge.dart';
 import 'package:grammar_checker/widgets/text_input_area.dart';
 import 'package:provider/provider.dart';
@@ -30,18 +29,9 @@ class _WideLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
         children: [
-          // Editor panel (65%)
-          Expanded(
-            flex: 65,
-            child: _EditorPanel(),
-          ),
-          // Divider
+          Expanded(flex: 65, child: _EditorPanel()),
           Container(width: 1, color: mist),
-          // Results panel (35%)
-          Expanded(
-            flex: 35,
-            child: _ResultsPanel(),
-          ),
+          Expanded(flex: 35, child: _ResultsPanel()),
         ],
       );
 }
@@ -50,15 +40,10 @@ class _NarrowLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
         children: [
-          // Header
           _Header(),
-          // Editor
+          _LoadingIndicator(),
           Expanded(flex: 2, child: _EditorSection()),
-          // Button
-          _CheckButton(),
-          // Error message
           _ErrorMessage(),
-          // Results
           Expanded(child: _ResultsPanel()),
         ],
       );
@@ -69,8 +54,8 @@ class _EditorPanel extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         children: [
           _Header(),
+          _LoadingIndicator(),
           Expanded(child: _EditorSection()),
-          _CheckButton(),
           _ErrorMessage(),
           const SizedBox(height: 16),
         ],
@@ -83,7 +68,6 @@ class _Header extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Row(
           children: [
-            // Logo/Title
             Row(
               children: [
                 Container(
@@ -107,7 +91,6 @@ class _Header extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            // Score badge
             Consumer<GrammarCheckProvider>(
               builder: (context, provider, _) {
                 if (provider.state == CheckState.success) {
@@ -126,10 +109,21 @@ class _Header extends StatelessWidget {
         provider.spellingErrorCount + provider.grammarErrorCount;
     final textLength = provider.text.length;
     if (textLength == 0) return 100;
-    // Score decreases with more errors relative to text length
     final errorRate = errorCount / (textLength / 100);
     return (100 - (errorRate * 10)).clamp(0, 100).round();
   }
+}
+
+class _LoadingIndicator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Consumer<GrammarCheckProvider>(
+        builder: (context, provider, _) => provider.state == CheckState.loading
+            ? const LinearProgressIndicator(
+                backgroundColor: mist,
+                color: coral,
+              )
+            : const SizedBox(height: 4),
+      );
 }
 
 class _EditorSection extends StatelessWidget {
@@ -146,32 +140,13 @@ class _EditorSection extends StatelessWidget {
       );
 }
 
-class _CheckButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Consumer<GrammarCheckProvider>(
-          builder: (context, provider, _) => SizedBox(
-            width: double.infinity,
-            child: GradientButton(
-              onPressed: provider.state == CheckState.loading
-                  ? null
-                  : provider.checkGrammar,
-              isLoading: provider.state == CheckState.loading,
-              child: const Text('Check Writing'),
-            ),
-          ),
-        ),
-      );
-}
-
 class _ErrorMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Consumer<GrammarCheckProvider>(
         builder: (context, provider, _) {
           if (provider.state == CheckState.error) {
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24),
+              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: spellingErrorLight,
@@ -210,9 +185,8 @@ class _ResultsPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Results header
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Consumer<GrammarCheckProvider>(
                 builder: (context, provider, _) => Row(
                   children: [
@@ -249,7 +223,6 @@ class _ResultsPanel extends StatelessWidget {
                 ),
               ),
             ),
-            // Error list
             Expanded(
               child: Consumer<GrammarCheckProvider>(
                 builder: (context, provider, _) => ErrorList(
@@ -259,12 +232,11 @@ class _ResultsPanel extends StatelessWidget {
                 ),
               ),
             ),
-            // Stats footer
             Consumer<GrammarCheckProvider>(
               builder: (context, provider, _) {
                 if (provider.state == CheckState.success) {
                   return Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     decoration: const BoxDecoration(
                       border: Border(top: BorderSide(color: mist)),
                     ),

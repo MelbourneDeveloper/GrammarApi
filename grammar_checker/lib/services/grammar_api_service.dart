@@ -27,24 +27,14 @@ class GrammarApiService {
   }
 
   /// Checks the given [text] for grammar and spelling errors.
-  Future<Result<CheckResponse, String>> checkText(
-    String text, {
-    bool spelling = true,
-    bool grammar = true,
-  }) async {
+  Future<Result<CheckResponse, String>> checkText(String text) async {
     try {
       final uri = Uri.parse('$baseUrl/v1/check');
 
       final response = await _client.post(
         uri,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'text': text,
-          'options': {
-            'spelling': spelling,
-            'grammar': grammar,
-          },
-        }),
+        body: jsonEncode({'text': text}),
       );
 
       if (response.statusCode == 200) {

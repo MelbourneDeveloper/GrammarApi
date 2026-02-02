@@ -20,18 +20,37 @@ enum CheckState {
   error,
 }
 
+/// Sample text with intentional grammar and spelling errors for demo.
+const _sampleText = '''
+Welcome to Inkwell, an powerful grammar and spelling checker. This tool will help you write more clearly and catch common mistakes before your readers do.
+
+Writing well is an skill that takes practise. Whether your working on an email, a blog post, or an important document, having a second pair of eyes can make all the diffrence. Thats exactly what this application provides.
+
+The quick brown fox jumps over the lazy dog. This sentence is perfectly correct and contains every letter of the alphabet. However, the next sentence has a few issues that our checker will catch.
+
+Their are many reasons to use a grammar checker. First, it helps you avoid embarassing mistakes in professional comunication. Second, it can teach you common patterns so you make less errors over time. Third, its simply faster then reading through everything yourself.
+
+Some common mistakes include using "an" before words that start with consonant sounds, misspelling words like "recieve" instead of "receive", and confusing homophones like "there", "their", and "they're".
+
+We hope you enjoy using Inkwell. Feel free to edit this text or paste your own content to see the checker in action!''';
+
 /// Provider for managing grammar check state.
 class GrammarCheckProvider extends ChangeNotifier {
   /// Creates a new [GrammarCheckProvider] instance.
-  GrammarCheckProvider({GrammarApiService? apiService})
-      : _apiService = apiService ?? GrammarApiService();
+  GrammarCheckProvider({GrammarApiService? apiService, bool loadSample = true})
+      : _apiService = apiService ?? GrammarApiService(),
+        _text = loadSample ? _sampleText : '' {
+    if (loadSample && _text.isNotEmpty) {
+      _scheduleCheck();
+    }
+  }
 
   final GrammarApiService _apiService;
   Timer? _debounceTimer;
   static const _debounceDuration = Duration(milliseconds: 500);
 
   CheckState _state = CheckState.idle;
-  String _text = '';
+  String _text;
   List<GrammarMatch> _matches = [];
   String? _errorMessage;
   int? _processingTimeMs;
