@@ -29,25 +29,27 @@ class ErrorList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (matches.isEmpty) {
       return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle_outline, size: 48, color: teal),
-            SizedBox(height: 16),
-            Text(
-              'No errors found',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: slate,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle_outline, size: 48, color: teal),
+              SizedBox(height: 16),
+              Text(
+                'No errors found',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: slate,
+                ),
               ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Your writing looks great!',
-              style: TextStyle(fontSize: 14, color: stone),
-            ),
-          ],
+              SizedBox(height: 4),
+              Text(
+                'Your writing looks great!',
+                style: TextStyle(fontSize: 14, color: stone),
+              ),
+            ],
+          ),
         ),
       );
     }

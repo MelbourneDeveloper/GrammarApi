@@ -13,17 +13,17 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  /// Waits for debounce (500ms) + API response time.
+  /// Waits for debounce then settles when API completes.
   Future<void> waitForAutoCheck(WidgetTester tester) async {
-    for (var i = 0; i < 110; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
+    await tester.pump(const Duration(milliseconds: 550));
+    await tester.pumpAndSettle();
   }
 
   /// Enters text and waits for auto-check to complete.
   Future<void> enterTextAndWait(WidgetTester tester, String text) async {
     await tester.enterText(find.byType(TextField), text);
-    await waitForAutoCheck(tester);
+    await tester.pump(const Duration(milliseconds: 550));
+    await tester.pumpAndSettle();
   }
 
   group('Initial UI', () {
@@ -128,7 +128,7 @@ void main() {
       await tester.pumpWidget(const GrammarCheckerApp(loadSample: false));
       await tester.pumpAndSettle();
 
-      await enterTextAndWait(tester, 'The quikc brwon fox.');
+      await enterTextAndWait(tester, 'This has speling and writting errors.');
 
       final errorCards = find.byType(ErrorCard);
       expect(errorCards.evaluate().length, greaterThanOrEqualTo(2));
@@ -137,24 +137,27 @@ void main() {
 
   group('Replacement Application', () {
     testWidgets('applies replacement when suggestion tapped', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 900));
       await tester.pumpWidget(const GrammarCheckerApp(loadSample: false));
       await tester.pumpAndSettle();
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await enterTextAndWait(tester, 'This is an test.');
 
       final suggestionFinder = find.text('a');
-      if (suggestionFinder.evaluate().isNotEmpty) {
-        await tester.tap(suggestionFinder.first);
-        await tester.pumpAndSettle();
+      expect(suggestionFinder, findsWidgets);
+      await tester.tap(suggestionFinder.first);
+      await tester.pumpAndSettle();
 
-        final textField = tester.widget<TextField>(find.byType(TextField));
-        expect(textField.controller?.text, contains('a test'));
-      }
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.controller?.text, contains('a test'));
     });
 
     testWidgets('removes error card after applying fix', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 900));
       await tester.pumpWidget(const GrammarCheckerApp(loadSample: false));
       await tester.pumpAndSettle();
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await enterTextAndWait(tester, 'This is an test.');
 
@@ -162,13 +165,12 @@ void main() {
       expect(initialErrorCount, greaterThan(0));
 
       final suggestionFinder = find.text('a');
-      if (suggestionFinder.evaluate().isNotEmpty) {
-        await tester.tap(suggestionFinder.first);
-        await tester.pumpAndSettle();
+      expect(suggestionFinder, findsWidgets);
+      await tester.tap(suggestionFinder.first);
+      await tester.pumpAndSettle();
 
-        final newErrorCount = find.byType(ErrorCard).evaluate().length;
-        expect(newErrorCount, lessThan(initialErrorCount));
-      }
+      final newErrorCount = find.byType(ErrorCard).evaluate().length;
+      expect(newErrorCount, lessThan(initialErrorCount));
     });
   });
 
@@ -237,7 +239,8 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'This is an test.');
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 510));
+      await tester.pump();
 
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     });
