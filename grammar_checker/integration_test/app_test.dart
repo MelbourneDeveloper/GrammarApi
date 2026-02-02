@@ -329,6 +329,9 @@ void main() {
 
   group('Mixed Error Types', () {
     testWidgets('detects both grammar and spelling errors', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(const GrammarCheckerApp(loadSample: false));
       await tester.pumpAndSettle();
 
@@ -339,6 +342,9 @@ void main() {
     });
 
     testWidgets('shows multiple error cards', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(const GrammarCheckerApp(loadSample: false));
       await tester.pumpAndSettle();
 
