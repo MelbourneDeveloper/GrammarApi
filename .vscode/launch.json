@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "grammar_checker",
+            "cwd": "grammar_checker",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "grammar_checker (profile mode)",
+            "cwd": "grammar_checker",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "grammar_checker (release mode)",
+            "cwd": "grammar_checker",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
