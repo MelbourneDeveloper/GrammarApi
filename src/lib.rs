@@ -18,8 +18,9 @@ use harper_core::{
     Dialect, Document, Span,
 };
 use metrics::{counter, histogram};
+use metrics_exporter_prometheus::PrometheusHandle;
 use serde::{Deserialize, Serialize};
-use std::{env, sync::Arc, time::Instant};
+use std::{env, fmt, sync::Arc, time::Instant};
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 use tower_http::{
     cors::CorsLayer,
@@ -38,10 +39,21 @@ const DEFAULT_RATE_LIMIT_PER_SECOND: u64 = 10;
 const DEFAULT_RATE_LIMIT_BURST: u32 = 30;
 
 /// Application state shared across handlers.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppState {
     dictionary: Arc<FstDictionary>,
     api_key: Option<String>,
+    metrics_handle: PrometheusHandle,
+}
+
+impl fmt::Debug for AppState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AppState")
+            .field("dictionary", &"<FstDictionary>")
+            .field("api_key", &self.api_key.as_ref().map(|_| "<redacted>"))
+            .field("metrics_handle", &"<PrometheusHandle>")
+            .finish()
+    }
 }
 
 /// Request payload for the check endpoint.
@@ -261,9 +273,8 @@ async fn health() -> &'static str {
     "ok"
 }
 
-async fn metrics_handler() -> String {
-    let recorder = metrics_exporter_prometheus::PrometheusBuilder::new().build_recorder();
-    recorder.render()
+async fn metrics_handler(State(state): State<AppState>) -> String {
+    state.metrics_handle.render()
 }
 
 async fn auth_middleware(
@@ -323,15 +334,7 @@ fn build_cors_layer() -> CorsLayer {
     }
 }
 
-fn build_rate_limiter(
-) -> GovernorLayer<
-    'static,
-    tower_governor::key_extractor::PeerIpKeyExtractor,
-    tower_governor::governor::GovernorConfig<
-        tower_governor::key_extractor::PeerIpKeyExtractor,
-        tower_governor::governor::DefaultKeyedStateStore<std::net::IpAddr>,
-    >,
-> {
+fn get_rate_limit_config() -> (u64, u32) {
     let rps: u64 = env::var("RATE_LIMIT_PER_SECOND")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -342,7 +345,43 @@ fn build_rate_limiter(
         .and_then(|s| s.parse().ok())
         .unwrap_or(DEFAULT_RATE_LIMIT_BURST);
 
-    let config = GovernorConfigBuilder::default()
+    (rps, burst)
+}
+
+/// Global metrics handle for sharing across app instances.
+static METRICS_HANDLE: std::sync::OnceLock<PrometheusHandle> = std::sync::OnceLock::new();
+
+fn get_or_init_metrics() -> PrometheusHandle {
+    METRICS_HANDLE
+        .get_or_init(|| {
+            metrics_exporter_prometheus::PrometheusBuilder::new()
+                .install_recorder()
+                .unwrap_or_else(|_| {
+                    // Recorder already installed, just build a new handle
+                    metrics_exporter_prometheus::PrometheusBuilder::new()
+                        .build_recorder()
+                        .handle()
+                })
+        })
+        .clone()
+}
+
+/// Creates the application router with all middleware configured.
+pub fn create_app() -> Router {
+    let metrics_handle = get_or_init_metrics();
+
+    let dictionary = FstDictionary::curated();
+    let api_key = env::var("API_KEY").ok().filter(|k| !k.is_empty());
+
+    let state = AppState {
+        dictionary,
+        api_key,
+        metrics_handle,
+    };
+
+    let cors = build_cors_layer();
+    let (rps, burst) = get_rate_limit_config();
+    let governor_conf = GovernorConfigBuilder::default()
         .per_second(rps)
         .burst_size(burst)
         .finish()
@@ -353,27 +392,7 @@ fn build_rate_limiter(
                 .finish()
                 .unwrap_or_else(|| unreachable!())
         });
-
-    GovernorLayer {
-        config: Box::leak(Box::new(config)),
-    }
-}
-
-/// Creates the application router with all middleware configured.
-pub fn create_app() -> Router {
-    // Initialize metrics
-    let _ = metrics_exporter_prometheus::PrometheusBuilder::new().install_recorder();
-
-    let dictionary = FstDictionary::curated();
-    let api_key = env::var("API_KEY").ok().filter(|k| !k.is_empty());
-
-    let state = AppState {
-        dictionary,
-        api_key,
-    };
-
-    let cors = build_cors_layer();
-    let rate_limiter = build_rate_limiter();
+    let rate_limiter = GovernorLayer::new(governor_conf);
 
     let x_request_id = http::HeaderName::from_static("x-request-id");
 

@@ -1,0 +1,8 @@
+{
+  "tags": {
+    "quick": [
+      "cargo:/Users/christianfindlay/Documents/Code/GrammarApi/Cargo.toml:check",
+      "cargo:/Users/christianfindlay/Documents/Code/GrammarApi/Cargo.toml:test"
+    ]
+  }
+}

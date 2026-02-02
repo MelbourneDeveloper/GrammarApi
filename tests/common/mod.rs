@@ -2,15 +2,23 @@
 
 use axum::{
     body::Body,
+    extract::connect_info::MockConnectInfo,
     http::{Request, StatusCode},
+    Router,
 };
 use grammar_api::create_app;
 use http_body_util::BodyExt;
 use serde_json::{json, Value};
+use std::net::SocketAddr;
 use tower::ServiceExt;
 
+fn create_test_app() -> Router {
+    let addr: SocketAddr = "127.0.0.1:3000".parse().unwrap_or_else(|_| unreachable!());
+    create_app().layer(MockConnectInfo(addr))
+}
+
 pub async fn post_check(text: &str) -> Result<Value, String> {
-    let app = create_app();
+    let app = create_test_app();
 
     let request = match Request::builder()
         .method("POST")
@@ -44,7 +52,7 @@ pub async fn post_check_with_options(
     spelling: bool,
     grammar: bool,
 ) -> Result<Value, String> {
-    let app = create_app();
+    let app = create_test_app();
 
     let payload = json!({
         "text": text,
@@ -82,7 +90,7 @@ pub async fn post_check_with_options(
 }
 
 pub async fn get_health() -> Result<(StatusCode, String), String> {
-    let app = create_app();
+    let app = create_test_app();
 
     let request = match Request::builder()
         .method("GET")
@@ -109,6 +117,11 @@ pub async fn get_health() -> Result<(StatusCode, String), String> {
         Ok(s) => s,
         Err(e) => return Err(format!("Invalid UTF-8: {}", e)),
     };
+
+    // Debug output
+    if status != StatusCode::OK {
+        eprintln!("Health check returned {} with body: {}", status, text);
+    }
 
     Ok((status, text))
 }
