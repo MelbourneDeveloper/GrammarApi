@@ -136,13 +136,6 @@ class GrammarCheckProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Clears all matches and resets to idle state.
-  void clearMatches() {
-    _matches = [];
-    _state = CheckState.idle;
-    notifyListeners();
-  }
-
   @override
   void dispose() {
     _debounceTimer?.cancel();

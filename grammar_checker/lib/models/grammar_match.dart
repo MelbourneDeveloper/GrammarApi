@@ -7,7 +7,6 @@ class GrammarMatch {
     required this.length,
     required this.replacements,
     required this.rule,
-    required this.context,
   });
 
   /// Creates a [GrammarMatch] from JSON data.
@@ -19,7 +18,6 @@ class GrammarMatch {
             .map((e) => e as String)
             .toList(),
         rule: Rule.fromJson(json['rule'] as Map<String, dynamic>),
-        context: MatchContext.fromJson(json['context'] as Map<String, dynamic>),
       );
 
   /// Human-readable description of the error.
@@ -36,9 +34,6 @@ class GrammarMatch {
 
   /// Rule that triggered this error.
   final Rule rule;
-
-  /// Context surrounding the error.
-  final MatchContext context;
 
   /// Extracts the error text from the original input.
   String getErrorText(String originalText) {
@@ -60,7 +55,6 @@ class GrammarMatch {
         length: length,
         replacements: replacements,
         rule: rule,
-        context: context,
       );
 }
 
@@ -80,30 +74,4 @@ class Rule {
 
   /// Category of the rule (spelling or grammar).
   final String category;
-}
-
-/// Context surrounding an error in the text.
-class MatchContext {
-  /// Creates a new [MatchContext] instance.
-  MatchContext({
-    required this.text,
-    required this.offset,
-    required this.length,
-  });
-
-  /// Creates a [MatchContext] from JSON data.
-  factory MatchContext.fromJson(Map<String, dynamic> json) => MatchContext(
-        text: json['text'] as String,
-        offset: json['offset'] as int,
-        length: json['length'] as int,
-      );
-
-  /// Text snippet around the error.
-  final String text;
-
-  /// Offset within the context.
-  final int offset;
-
-  /// Length within the context.
-  final int length;
 }
