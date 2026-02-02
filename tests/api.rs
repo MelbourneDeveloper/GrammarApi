@@ -1,3 +1,7 @@
+//! API tests for the grammar API.
+
+#![allow(clippy::panic, clippy::manual_let_else)]
+
 mod common;
 
 use axum::http::StatusCode;

@@ -1,3 +1,7 @@
+//! Grammar tests for the grammar API.
+
+#![allow(clippy::panic, clippy::manual_let_else)]
+
 mod common;
 
 use common::{find_grammar_errors, get_matches, has_replacement, post_check};

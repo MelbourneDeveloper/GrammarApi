@@ -1,3 +1,7 @@
+//! Edge case tests for the grammar API.
+
+#![allow(clippy::panic, clippy::manual_let_else)]
+
 mod common;
 
 use common::{get_matches, post_check};
