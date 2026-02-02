@@ -368,6 +368,15 @@ fn get_or_init_metrics() -> PrometheusHandle {
 
 /// Creates the application router with all middleware configured.
 pub fn create_app() -> Router {
+    create_app_internal(true)
+}
+
+/// Creates the application router for testing (without rate limiting).
+pub fn create_app_for_testing() -> Router {
+    create_app_internal(false)
+}
+
+fn create_app_internal(enable_rate_limiting: bool) -> Router {
     let metrics_handle = get_or_init_metrics();
 
     let dictionary = FstDictionary::curated();
@@ -392,10 +401,7 @@ pub fn create_app() -> Router {
             auth_middleware,
         ));
 
-    // Only add rate limiting if enabled (disabled in test mode via env var)
-    let rate_limit_enabled = env::var("DISABLE_RATE_LIMIT").is_err();
-
-    let router = if rate_limit_enabled {
+    let router = if enable_rate_limiting {
         let (rps, burst) = get_rate_limit_config();
         let governor_conf = GovernorConfigBuilder::default()
             .per_second(rps)

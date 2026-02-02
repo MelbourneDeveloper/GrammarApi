@@ -2,19 +2,16 @@
 
 use axum::{
     body::Body,
-    extract::connect_info::MockConnectInfo,
     http::{Request, StatusCode},
     Router,
 };
-use grammar_api::create_app;
+use grammar_api::create_app_for_testing;
 use http_body_util::BodyExt;
 use serde_json::{json, Value};
-use std::net::SocketAddr;
 use tower::ServiceExt;
 
 fn create_test_app() -> Router {
-    let addr: SocketAddr = "127.0.0.1:3000".parse().unwrap_or_else(|_| unreachable!());
-    create_app().layer(MockConnectInfo(addr))
+    create_app_for_testing()
 }
 
 pub async fn post_check(text: &str) -> Result<Value, String> {
@@ -117,11 +114,6 @@ pub async fn get_health() -> Result<(StatusCode, String), String> {
         Ok(s) => s,
         Err(e) => return Err(format!("Invalid UTF-8: {}", e)),
     };
-
-    // Debug output
-    if status != StatusCode::OK {
-        eprintln!("Health check returned {} with body: {}", status, text);
-    }
 
     Ok((status, text))
 }

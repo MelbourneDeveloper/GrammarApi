@@ -6,3 +6,10 @@
 - Turn lintz up to errors. Turn all lintz on
 - No files larger than 400 LOC
 - Functions less than 30 LOC
+
+## Rust
+
+## Dart
+- You must use the austerity package for linting and the nadz package for Result<T,E>.
+
+
