@@ -1,3 +1,8 @@
+## Too Many Cooks
+- Register on TMC immediately
+- Don't edit files that are locked; lock files when editing
+- COMMUNICATE REGULARLY AND COORDINATE WITH OTHERS THROUGH MESSAGES
+
 # Rules
 
 - ZERO DUPLICATION
@@ -11,5 +16,6 @@
 
 ## Dart
 - You must use the austerity package for linting and the nadz package for Result<T,E>.
+- Use Material Design for the theme!!!
 
 

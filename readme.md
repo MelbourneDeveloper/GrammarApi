@@ -1,128 +1,91 @@
 # Grammar API
 
-Open source spelling and grammar correction API for word processors and text-based UIs.
-
-## Requirements
-
-- **Open source**: No proprietary dependencies
-- **Deterministic**: Rule-based, no ML/LLM randomness
-- **Fast**: Sub-100ms response times for typical text blocks
-- **Language**: English initially, multi-language support planned
-- **Deployment**: Containerized API (Docker)
-- **Dictionary**: Standard Hunspell en_US (LibreOffice/Firefox)
-
----
-
-## Technology Stack
-
-### Grammar: Harper
-**Language**: Rust | **License**: Apache 2.0
-
-- Millisecond-level linting (50x faster than LanguageTool)
-- 1/50th memory footprint of LanguageTool
-- Active development by Automattic (WordPress)
-- English only (multi-language planned)
-
-### Spelling: Spellbook
-**Language**: Rust | **License**: MIT
-
-- Helix editor's Rust rewrite of Nuspell
-- Hunspell dictionary compatible (same as LibreOffice, Firefox, Chrome)
-- `no_std` compatible, minimal dependencies
-
----
+Fast, open-source grammar and spelling API built with Rust and [Harper](https://github.com/Automattic/harper).
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Grammar API                       │
-│                  (Rust/Axum)                        │
-├─────────────────────────────────────────────────────┤
-│  POST /v1/check                                     │
-│  { "text": "...", "language": "en-US" }            │
-│  →                                                  │
-│  { "matches": [...], "metrics": {...} }            │
-├─────────────────────────────────────────────────────┤
-│              Processing Pipeline                    │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐     │
-│  │ Spellbook│ →  │  Harper  │ →  │  Merge   │     │
-│  │(spelling)│    │(grammar) │    │ Results  │     │
-│  └──────────┘    └──────────┘    └──────────┘     │
-└─────────────────────────────────────────────────────┘
-```
+```mermaid
+flowchart LR
+    subgraph Clients
+        A[Flutter App]
+        B[HTTP Client]
+    end
 
-## API
+    subgraph Middleware
+        C[CORS]
+        D[Rate Limiter]
+        E[Auth]
+    end
 
-### Check Endpoint
+    subgraph API["Axum Server"]
+        F["/v1/check"]
+        G["/health"]
+        H["/metrics"]
+    end
 
-```http
-POST /v1/check
-Content-Type: application/json
+    subgraph Core["Harper Engine"]
+        I[Linter]
+        J[FST Dictionary]
+    end
 
-{
-  "text": "This is a sentnece with erors.",
-  "language": "en-US",
-  "options": {
-    "spelling": true,
-    "grammar": true
-  }
-}
+    A & B --> C --> D --> E --> F & G & H
+    F --> I --> J
 ```
 
-### Response
+## Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/check` | Check text |
+| GET | `/health` | Health check |
+| GET | `/metrics` | Prometheus |
+
+## Usage
+
+```bash
+cargo run --release
+
+curl -X POST http://localhost:8080/v1/check \
+  -H "Content-Type: application/json" \
+  -d '{"text": "This is an test."}'
+```
+
+## Response
 
 ```json
 {
-  "matches": [
-    {
-      "message": "Possible spelling mistake",
-      "offset": 10,
-      "length": 8,
-      "replacements": ["sentence"],
-      "rule": { "id": "SPELL", "category": "spelling" }
-    },
-    {
-      "message": "Possible spelling mistake",
-      "offset": 24,
-      "length": 5,
-      "replacements": ["errors"],
-      "rule": { "id": "SPELL", "category": "spelling" }
-    }
-  ],
-  "metrics": {
-    "processingTimeMs": 12
-  }
+  "matches": [{
+    "message": "Did you mean 'a'?",
+    "offset": 8,
+    "length": 2,
+    "replacements": ["a"],
+    "rule": { "id": "AnA", "category": "grammar" },
+    "context": { "text": "This is an test.", "offset": 8, "length": 2 }
+  }],
+  "metrics": { "processingTimeMs": 5 }
 }
 ```
 
----
+## Config
 
-## Implementation Stack
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `HOST` | `0.0.0.0` | Bind address |
+| `PORT` | `8080` | Listen port |
+| `API_KEY` | - | Auth key (optional) |
+| `RATE_LIMIT_PER_SECOND` | `10` | Req/sec/IP |
+| `RATE_LIMIT_BURST` | `30` | Burst size |
+| `CORS_ORIGINS` | `*` | Allowed origins |
 
-| Component | Technology | Notes |
-|-----------|------------|-------|
-| HTTP Server | Axum | Fast async Rust web framework |
-| Grammar | harper-core | Native Rust grammar checking |
-| Spelling | spellbook | Hunspell-compatible, pure Rust |
-| Dictionaries | Hunspell format | LibreOffice/Firefox dictionaries |
-| Serialization | serde | Standard Rust JSON handling |
-| Deployment | Docker | Single container, minimal footprint |
+## Stack
 
----
+| Component | Tech |
+|-----------|------|
+| Server | Axum |
+| Grammar/Spelling | Harper |
+| Metrics | Prometheus |
+| Rate Limit | tower_governor |
 
-## AI Integration (Future)
+## License
 
-Separate service for non-deterministic features:
-- Style suggestions
-- Rewrite/rephrase
-- Tone adjustments
-- Context-aware corrections
-
----
-
-## References
-
-- [Harper](https://github.com/Automattic/harper)
-- [Spellbook](https://github.com/helix-editor/spellbook)
-- [Hunspell](https://github.com/hunspell/hunspell)
+MIT

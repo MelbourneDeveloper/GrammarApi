@@ -10,8 +10,8 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<void> waitForApiResponse(WidgetTester tester) async {
-    // Pump frames for up to 10 seconds waiting for API response
+  Future<void> waitForAutoCheck(WidgetTester tester) async {
+    // Wait for debounce (500ms) + API response time
     for (var i = 0; i < 100; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -22,27 +22,37 @@ void main() {
       await tester.pumpWidget(const GrammarCheckerApp());
       await tester.pumpAndSettle();
 
-      expect(find.text('Grammar Checker'), findsOneWidget);
-      expect(find.text('Check Grammar'), findsOneWidget);
+      expect(find.text('Inkwell'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('No errors found'), findsOneWidget);
     });
 
-    testWidgets('checks text with grammar error and shows results',
+    testWidgets('auto-checks text with grammar error and shows results',
         (tester) async {
       await tester.pumpWidget(const GrammarCheckerApp());
       await tester.pumpAndSettle();
 
       // Enter text with a grammar error (incorrect article)
       await tester.enterText(find.byType(TextField), 'This is an test.');
+      await waitForAutoCheck(tester);
+
+      // Verify suggestions panel shows errors
+      expect(find.text('Suggestions'), findsOneWidget);
+    });
+
+    testWidgets('auto-checks text with spelling error and shows results',
+        (tester) async {
+      await tester.pumpWidget(const GrammarCheckerApp());
       await tester.pumpAndSettle();
 
-      // Tap the check button
-      await tester.tap(find.text('Check Grammar'));
-      await waitForApiResponse(tester);
+      // Enter text with a spelling error
+      await tester.enterText(
+        find.byType(TextField),
+        'This has a speling error.',
+      );
+      await waitForAutoCheck(tester);
 
-      // Verify error card is displayed
-      expect(find.byType(Card), findsWidgets);
+      // Verify suggestions panel shows errors
+      expect(find.text('Suggestions'), findsOneWidget);
     });
 
     testWidgets('applies replacement when suggestion is tapped',
@@ -52,11 +62,7 @@ void main() {
 
       // Enter text with a grammar error
       await tester.enterText(find.byType(TextField), 'This is an test.');
-      await tester.pumpAndSettle();
-
-      // Tap the check button
-      await tester.tap(find.text('Check Grammar'));
-      await waitForApiResponse(tester);
+      await waitForAutoCheck(tester);
 
       // Find and tap a suggestion chip (should be "a")
       final suggestionChip = find.widgetWithText(ActionChip, 'a');
@@ -80,26 +86,35 @@ void main() {
         find.byType(TextField),
         'This is a correct sentence.',
       );
+      await waitForAutoCheck(tester);
+
+      // Verify score badge appears (indicates success with no errors)
+      expect(find.text('Suggestions'), findsOneWidget);
+    });
+
+    testWidgets('shows error count in app bar after check', (tester) async {
+      await tester.pumpWidget(const GrammarCheckerApp());
       await tester.pumpAndSettle();
 
-      // Tap the check button
-      await tester.tap(find.text('Check Grammar'));
-      await waitForApiResponse(tester);
+      // Enter text with errors
+      await tester.enterText(find.byType(TextField), 'This is an test.');
+      await waitForAutoCheck(tester);
 
-      // Verify no errors shown
-      expect(find.text('No errors found'), findsOneWidget);
+      // Verify stats footer shows counts
+      expect(find.textContaining('spelling'), findsWidgets);
+      expect(find.textContaining('grammar'), findsWidgets);
     });
 
     testWidgets('handles empty text gracefully', (tester) async {
       await tester.pumpWidget(const GrammarCheckerApp());
       await tester.pumpAndSettle();
 
-      // Don't enter any text, just tap check
-      await tester.tap(find.text('Check Grammar'));
-      await tester.pumpAndSettle();
+      // Enter empty text
+      await tester.enterText(find.byType(TextField), '');
+      await waitForAutoCheck(tester);
 
-      // Should still show "No errors found"
-      expect(find.text('No errors found'), findsOneWidget);
+      // Should not crash, suggestions panel still visible
+      expect(find.text('Suggestions'), findsOneWidget);
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:grammar_checker/models/grammar_match.dart';
 import 'package:grammar_checker/services/grammar_api_service.dart';
@@ -25,6 +27,8 @@ class GrammarCheckProvider extends ChangeNotifier {
       : _apiService = apiService ?? GrammarApiService();
 
   final GrammarApiService _apiService;
+  Timer? _debounceTimer;
+  static const _debounceDuration = Duration(milliseconds: 500);
 
   CheckState _state = CheckState.idle;
   String _text = '';
@@ -56,10 +60,16 @@ class GrammarCheckProvider extends ChangeNotifier {
   /// Number of grammar errors found.
   int get grammarErrorCount => _matches.where((m) => m.isGrammarError).length;
 
-  /// Updates the text to check.
+  /// Updates the text and triggers auto-check with debounce.
   void updateText(String newText) {
     _text = newText;
     notifyListeners();
+    _scheduleCheck();
+  }
+
+  void _scheduleCheck() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_debounceDuration, checkGrammar);
   }
 
   /// Checks the current text for grammar and spelling errors.
@@ -116,6 +126,7 @@ class GrammarCheckProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _apiService.dispose();
     super.dispose();
   }
