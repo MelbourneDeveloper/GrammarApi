@@ -13,17 +13,17 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  /// Waits for debounce (500ms) + API response time.
+  /// Waits for debounce then settles when API completes.
   Future<void> waitForAutoCheck(WidgetTester tester) async {
-    for (var i = 0; i < 110; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
+    await tester.pump(const Duration(milliseconds: 550));
+    await tester.pumpAndSettle();
   }
 
   /// Enters text and waits for auto-check to complete.
   Future<void> enterTextAndWait(WidgetTester tester, String text) async {
     await tester.enterText(find.byType(TextField), text);
-    await waitForAutoCheck(tester);
+    await tester.pump(const Duration(milliseconds: 550));
+    await tester.pumpAndSettle();
   }
 
   group('Initial UI', () {
@@ -237,7 +237,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'This is an test.');
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 550));
 
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
     });
