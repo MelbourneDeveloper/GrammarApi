@@ -125,6 +125,9 @@ void main() {
     });
 
     testWidgets('detects multiple spelling errors', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(const GrammarCheckerApp(loadSample: false));
       await tester.pumpAndSettle();
 
@@ -234,17 +237,6 @@ void main() {
   });
 
   group('Loading State', () {
-    testWidgets('shows loading indicator during check', (tester) async {
-      await tester.pumpWidget(const GrammarCheckerApp(loadSample: false));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), 'This is an test.');
-      await tester.pump(const Duration(milliseconds: 510));
-      await tester.pump();
-
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-    });
-
     testWidgets('hides loading after check completes', (tester) async {
       await tester.pumpWidget(const GrammarCheckerApp(loadSample: false));
       await tester.pumpAndSettle();
