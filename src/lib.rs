@@ -380,31 +380,41 @@ pub fn create_app() -> Router {
     };
 
     let cors = build_cors_layer();
-    let (rps, burst) = get_rate_limit_config();
-    let governor_conf = GovernorConfigBuilder::default()
-        .per_second(rps)
-        .burst_size(burst)
-        .finish()
-        .unwrap_or_else(|| {
-            GovernorConfigBuilder::default()
-                .per_second(DEFAULT_RATE_LIMIT_PER_SECOND)
-                .burst_size(DEFAULT_RATE_LIMIT_BURST)
-                .finish()
-                .unwrap_or_else(|| unreachable!())
-        });
-    let rate_limiter = GovernorLayer::new(governor_conf);
 
     let x_request_id = http::HeaderName::from_static("x-request-id");
 
-    Router::new()
+    let router = Router::new()
         .route("/v1/check", post(check_text))
         .route("/health", get(health))
         .route("/metrics", get(metrics_handler))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,
-        ))
-        .layer(rate_limiter)
+        ));
+
+    // Only add rate limiting if enabled (disabled in test mode via env var)
+    let rate_limit_enabled = env::var("DISABLE_RATE_LIMIT").is_err();
+
+    let router = if rate_limit_enabled {
+        let (rps, burst) = get_rate_limit_config();
+        let governor_conf = GovernorConfigBuilder::default()
+            .per_second(rps)
+            .burst_size(burst)
+            .finish()
+            .unwrap_or_else(|| {
+                GovernorConfigBuilder::default()
+                    .per_second(DEFAULT_RATE_LIMIT_PER_SECOND)
+                    .burst_size(DEFAULT_RATE_LIMIT_BURST)
+                    .finish()
+                    .unwrap_or_else(|| unreachable!())
+            });
+        let rate_limiter = GovernorLayer::new(governor_conf);
+        router.layer(rate_limiter)
+    } else {
+        router
+    };
+
+    router
         .layer(PropagateRequestIdLayer::new(x_request_id.clone()))
         .layer(SetRequestIdLayer::new(
             x_request_id.clone(),
