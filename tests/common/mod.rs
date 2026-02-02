@@ -43,49 +43,6 @@ pub async fn post_check(text: &str) -> Result<Value, String> {
     }
 }
 
-pub async fn post_check_with_options(
-    text: &str,
-    language: &str,
-    spelling: bool,
-    grammar: bool,
-) -> Result<Value, String> {
-    let app = create_test_app();
-
-    let payload = json!({
-        "text": text,
-        "language": language,
-        "options": {
-            "spelling": spelling,
-            "grammar": grammar
-        }
-    });
-
-    let request = match Request::builder()
-        .method("POST")
-        .uri("/v1/check")
-        .header("content-type", "application/json")
-        .body(Body::from(payload.to_string()))
-    {
-        Ok(req) => req,
-        Err(e) => return Err(format!("Failed to build request: {}", e)),
-    };
-
-    let response = match app.oneshot(request).await {
-        Ok(resp) => resp,
-        Err(e) => return Err(format!("Request failed: {}", e)),
-    };
-
-    let body = match response.into_body().collect().await {
-        Ok(collected) => collected.to_bytes(),
-        Err(e) => return Err(format!("Failed to read body: {}", e)),
-    };
-
-    match serde_json::from_slice(&body) {
-        Ok(json) => Ok(json),
-        Err(e) => Err(format!("Failed to parse JSON: {}", e)),
-    }
-}
-
 pub async fn get_health() -> Result<(StatusCode, String), String> {
     let app = create_test_app();
 

@@ -61,35 +61,6 @@ impl fmt::Debug for AppState {
 pub struct CheckRequest {
     /// The text to check for grammar and spelling errors.
     text: String,
-    /// Language code (default: en-US).
-    #[serde(default = "default_language")]
-    #[allow(dead_code)]
-    language: String,
-    /// Optional checking options.
-    #[serde(default)]
-    #[allow(dead_code)]
-    options: CheckOptions,
-}
-
-fn default_language() -> String {
-    "en-US".to_string()
-}
-
-/// Options for controlling what checks to perform.
-#[derive(Debug, Deserialize, Default)]
-pub struct CheckOptions {
-    /// Enable spelling checks (default: true).
-    #[serde(default = "default_true")]
-    #[allow(dead_code)]
-    spelling: bool,
-    /// Enable grammar checks (default: true).
-    #[serde(default = "default_true")]
-    #[allow(dead_code)]
-    grammar: bool,
-}
-
-fn default_true() -> bool {
-    true
 }
 
 /// Response from the check endpoint.
@@ -368,7 +339,10 @@ fn get_or_init_metrics() -> PrometheusHandle {
 
 /// Creates the application router with all middleware configured.
 pub fn create_app() -> Router {
-    create_app_internal(true)
+    let enable_rate_limiting = env::var("DISABLE_RATE_LIMITING")
+        .map(|v| v != "true" && v != "1")
+        .unwrap_or(true);
+    create_app_internal(enable_rate_limiting)
 }
 
 /// Creates the application router for testing (without rate limiting).
@@ -450,15 +424,5 @@ mod tests {
     #[test]
     fn test_max_text_size_constant() {
         assert_eq!(MAX_TEXT_SIZE, 100 * 1024);
-    }
-
-    #[test]
-    fn test_default_language() {
-        assert_eq!(default_language(), "en-US");
-    }
-
-    #[test]
-    fn test_default_true() {
-        assert!(default_true());
     }
 }

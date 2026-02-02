@@ -5,7 +5,7 @@
 mod common;
 
 use axum::http::StatusCode;
-use common::{get_health, get_matches, post_check, post_check_with_options};
+use common::{get_health, get_matches, post_check};
 
 #[tokio::test]
 async fn health_endpoint_returns_ok() {
@@ -240,32 +240,6 @@ async fn error_has_replacements_array() {
     assert!(
         error["replacements"].is_array(),
         "Error should have replacements array"
-    );
-}
-
-#[tokio::test]
-async fn accepts_language_parameter() {
-    let result = match post_check_with_options("Test text.", "en-US", true, true).await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    assert!(
-        result["matches"].is_array(),
-        "Should accept language parameter"
-    );
-}
-
-#[tokio::test]
-async fn accepts_options_parameter() {
-    let result = match post_check_with_options("Test text.", "en-US", true, true).await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    assert!(
-        result["matches"].is_array(),
-        "Should accept options parameter"
     );
 }
 

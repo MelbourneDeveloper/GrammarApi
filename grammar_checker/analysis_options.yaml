@@ -1,1 +1,10 @@
 include: package:austerity/analysis_options.yaml
+
+analyzer:
+  errors:
+    # ALL LINTS ARE ERRORS - NO WARNINGS
+    public_member_api_docs: error
+    prefer_expression_function_bodies: error
+    always_put_required_named_parameters_first: error
+    avoid_types_on_closure_parameters: error
+    sort_pub_dependencies: error
