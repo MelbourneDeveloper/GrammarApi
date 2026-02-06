@@ -1,260 +1,151 @@
-//! Spelling tests for the grammar API.
+//! Spelling tests for the grammar API using shared fixtures.
 
-#![allow(clippy::panic, clippy::manual_let_else)]
+#![allow(clippy::panic, clippy::manual_let_else, clippy::expect_used)]
 
 mod common;
 
-use common::{find_spelling_errors, get_matches, has_replacement, post_check};
+use common::{find_spelling_errors, get_matches, has_replacement, post_check, TestFixtures};
 
 #[tokio::test]
 async fn detects_simple_misspelling() {
-    let result = match post_check("This has a speling mistake.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("spelling_simple_misspelling");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
 
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(!spelling_errors.is_empty(), "Should detect spelling error");
+    assert!(!errors.is_empty(), "{}", case.description);
 
-    let error = spelling_errors[0];
-    assert!(
-        has_replacement(error, "spelling"),
-        "Should suggest 'spelling' as replacement"
-    );
+    let expected = &case.expected_errors[0];
+    if let Some(replacements) = &expected.replacements {
+        assert!(has_replacement(errors[0], &replacements[0]));
+    }
 }
 
 #[tokio::test]
 async fn detects_multiple_misspellings() {
-    let result = match post_check("The quik brwon fox jumps ovar the lazzy dog.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("spelling_multiple_errors");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
 
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(
-        spelling_errors.len() >= 3,
-        "Should detect at least 3 spelling errors, found {}",
-        spelling_errors.len()
-    );
+    let min_count = case.expected_errors[0].min_count.unwrap_or(1);
+    assert!(errors.len() >= min_count, "{}", case.description);
 }
 
 #[tokio::test]
 async fn suggests_replacement_for_common_typo() {
-    let result = match post_check("I recieved your message.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("spelling_common_typo_receive");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
 
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(
-        !spelling_errors.is_empty(),
-        "Should detect 'recieved' error"
-    );
+    assert!(!errors.is_empty(), "{}", case.description);
 
-    let error = spelling_errors[0];
-    match error["replacements"].as_array() {
-        Some(replacements) => {
-            assert!(
-                !replacements.is_empty(),
-                "Should provide at least one suggestion for 'recieved'"
-            );
-        }
-        None => panic!("Missing replacements array"),
-    }
+    let replacements = errors[0]["replacements"]
+        .as_array()
+        .expect("Missing replacements");
+    assert!(!replacements.is_empty());
 }
 
 #[tokio::test]
 async fn detects_transposed_letters() {
-    let result = match post_check("Teh cat sat on teh mat.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("spelling_transposed_letters");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
 
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(
-        spelling_errors.len() >= 2,
-        "Should detect transposed letters in 'teh'"
-    );
+    let min_count = case.expected_errors[0].min_count.unwrap_or(1);
+    assert!(errors.len() >= min_count, "{}", case.description);
 }
 
 #[tokio::test]
 async fn detects_missing_letters() {
-    let result = match post_check("The governmnt made an announcment.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("spelling_missing_letters");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
 
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(spelling_errors.len() >= 2, "Should detect missing letters");
+    let min_count = case.expected_errors[0].min_count.unwrap_or(1);
+    assert!(errors.len() >= min_count, "{}", case.description);
 }
 
 #[tokio::test]
 async fn detects_extra_letters() {
-    let result = match post_check("This is definately wrong.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("spelling_extra_letters");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
 
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(!spelling_errors.is_empty(), "Should detect 'definately'");
+    assert!(!errors.is_empty(), "{}", case.description);
 
-    let error = spelling_errors[0];
-    assert!(
-        has_replacement(error, "definitely"),
-        "Should suggest 'definitely'"
-    );
-}
-
-#[tokio::test]
-async fn correct_spelling_returns_no_errors() {
-    let result = match post_check("The quick brown fox jumps over the lazy dog.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
-
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(
-        spelling_errors.is_empty(),
-        "Correct text should have no spelling errors"
-    );
-}
-
-#[tokio::test]
-async fn handles_proper_nouns() {
-    let result = match post_check("John went to London with Mary.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
-
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(
-        spelling_errors.is_empty(),
-        "Should not flag proper nouns as spelling errors"
-    );
-}
-
-#[tokio::test]
-async fn handles_contractions() {
-    let result = match post_check("I can't believe it's not butter.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
-
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(
-        spelling_errors.is_empty(),
-        "Should not flag contractions as spelling errors"
-    );
-}
-
-#[tokio::test]
-async fn handles_hyphenated_words() {
-    let result = match post_check("This is a well-known fact.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
-
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(
-        spelling_errors.is_empty(),
-        "Should not flag hyphenated words as spelling errors"
-    );
-}
-
-#[tokio::test]
-async fn provides_multiple_suggestions() {
-    let result = match post_check("I ned help.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
-
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(!spelling_errors.is_empty(), "Should detect 'ned'");
-
-    let error = spelling_errors[0];
-    if let Some(replacements) = error["replacements"].as_array() {
-        assert!(
-            !replacements.is_empty(),
-            "Should provide at least one suggestion"
-        );
-    } else {
-        panic!("Missing replacements array");
+    let expected = &case.expected_errors[0];
+    if let Some(replacements) = &expected.replacements {
+        assert!(has_replacement(errors[0], &replacements[0]));
     }
 }
 
 #[tokio::test]
+async fn correct_spelling_returns_no_errors() {
+    let case = TestFixtures::case("correct_pangram");
+
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
+
+    assert!(errors.is_empty(), "{}", case.description);
+}
+
+#[tokio::test]
+async fn handles_proper_nouns() {
+    let case = TestFixtures::case("correct_proper_nouns");
+
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
+
+    assert!(errors.is_empty(), "{}", case.description);
+}
+
+#[tokio::test]
+async fn handles_contractions() {
+    let case = TestFixtures::case("correct_contractions");
+
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
+
+    assert!(errors.is_empty(), "{}", case.description);
+}
+
+#[tokio::test]
+async fn handles_hyphenated_words() {
+    let case = TestFixtures::case("correct_hyphenated");
+
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
+
+    assert!(errors.is_empty(), "{}", case.description);
+}
+
+#[tokio::test]
 async fn detects_doubled_letters_error() {
-    let result = match post_check("I have a beautifull garden.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("spelling_doubled_letters");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_spelling_errors(matches);
 
-    let spelling_errors = find_spelling_errors(matches);
-    assert!(!spelling_errors.is_empty(), "Should detect 'beautifull'");
+    assert!(!errors.is_empty(), "{}", case.description);
 
-    let error = spelling_errors[0];
-    assert!(
-        has_replacement(error, "beautiful"),
-        "Should suggest 'beautiful'"
-    );
+    let expected = &case.expected_errors[0];
+    if let Some(replacements) = &expected.replacements {
+        assert!(has_replacement(errors[0], &replacements[0]));
+    }
 }

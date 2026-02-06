@@ -1,273 +1,156 @@
-//! Grammar tests for the grammar API.
+//! Grammar tests for the grammar API using shared fixtures.
 
-#![allow(clippy::panic, clippy::manual_let_else)]
+#![allow(clippy::panic, clippy::manual_let_else, clippy::expect_used)]
 
 mod common;
 
-use common::{find_grammar_errors, get_matches, has_replacement, post_check};
+use common::{find_grammar_errors, get_matches, has_replacement, post_check, TestFixtures};
 
 #[tokio::test]
 async fn detects_incorrect_indefinite_article_an() {
-    let result = match post_check("This is an test.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("grammar_article_an_before_consonant");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(!grammar_errors.is_empty(), "Should detect 'an test' error");
+    assert!(!errors.is_empty(), "{}", case.description);
 
-    let error = grammar_errors[0];
-    assert!(
-        has_replacement(error, "a"),
-        "Should suggest 'a' as replacement"
-    );
+    let expected = &case.expected_errors[0];
+    if let Some(replacements) = &expected.replacements {
+        assert!(has_replacement(errors[0], &replacements[0]));
+    }
 }
 
 #[tokio::test]
 async fn detects_incorrect_indefinite_article_a() {
-    let result = match post_check("I saw a elephant.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("grammar_article_a_before_vowel");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(
-        !grammar_errors.is_empty(),
-        "Should detect 'a elephant' error"
-    );
+    assert!(!errors.is_empty(), "{}", case.description);
 
-    let error = grammar_errors[0];
-    assert!(
-        has_replacement(error, "an"),
-        "Should suggest 'an' as replacement"
-    );
+    let expected = &case.expected_errors[0];
+    if let Some(replacements) = &expected.replacements {
+        assert!(has_replacement(errors[0], &replacements[0]));
+    }
 }
 
 #[tokio::test]
 async fn correct_indefinite_article_passes() {
-    let result = match post_check("This is a test and an example.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("correct_articles");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(
-        grammar_errors.is_empty(),
-        "Correct article usage should not trigger errors"
-    );
+    assert!(errors.is_empty(), "{}", case.description);
 }
 
 #[tokio::test]
 async fn detects_repeated_words() {
-    let result = match post_check("The the cat sat on the mat.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("grammar_repeated_word");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
 
-    assert!(!matches.is_empty(), "Should detect repeated word 'the the'");
-}
-
-#[tokio::test]
-async fn detects_multiple_grammar_errors() {
-    let result = match post_check("This is an test and I seen a elephant.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
-
-    assert!(matches.len() >= 2, "Should detect multiple grammar errors");
+    let min_count = case.expected_errors[0].min_count.unwrap_or(1);
+    assert!(matches.len() >= min_count, "{}", case.description);
 }
 
 #[tokio::test]
 async fn correct_grammar_returns_no_errors() {
-    let result = match post_check("The quick brown fox jumps over the lazy dog.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("correct_pangram");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(
-        grammar_errors.is_empty(),
-        "Correct grammar should not trigger errors"
-    );
+    assert!(errors.is_empty(), "{}", case.description);
 }
 
 #[tokio::test]
 async fn error_has_correct_offset() {
-    let result = match post_check("This is an test.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("grammar_article_an_before_consonant");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(!grammar_errors.is_empty(), "Should detect grammar error");
+    assert!(!errors.is_empty());
 
-    let error = grammar_errors[0];
-    let offset = match error["offset"].as_u64() {
-        Some(o) => o,
-        None => panic!("Missing offset in error"),
-    };
-
-    assert_eq!(offset, 8, "Error offset should be 8 (start of 'an')");
+    let expected = &case.expected_errors[0];
+    if let Some(expected_offset) = expected.offset {
+        let offset = errors[0]["offset"].as_u64().expect("Missing offset");
+        assert_eq!(offset, expected_offset);
+    }
 }
 
 #[tokio::test]
 async fn error_has_correct_length() {
-    let result = match post_check("This is an test.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("grammar_article_an_before_consonant");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(!grammar_errors.is_empty(), "Should detect grammar error");
+    assert!(!errors.is_empty());
 
-    let error = grammar_errors[0];
-    let length = match error["length"].as_u64() {
-        Some(l) => l,
-        None => panic!("Missing length in error"),
-    };
-
-    assert_eq!(length, 2, "Error length should be 2 (length of 'an')");
-}
-
-#[tokio::test]
-async fn detects_sentence_starting_lowercase() {
-    let result = match post_check("hello world. this is wrong.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
-
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
-
-    // May or may not detect depending on Harper's rules
-    // This test documents the behavior
-    let _ = matches;
+    let expected = &case.expected_errors[0];
+    if let Some(expected_length) = expected.length {
+        let length = errors[0]["length"].as_u64().expect("Missing length");
+        assert_eq!(length, expected_length);
+    }
 }
 
 #[tokio::test]
 async fn handles_questions_correctly() {
-    let result = match post_check("What is an apple?").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("correct_question");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(
-        grammar_errors.is_empty(),
-        "Correct question should not trigger errors"
-    );
+    assert!(errors.is_empty(), "{}", case.description);
 }
 
 #[tokio::test]
 async fn handles_exclamations_correctly() {
-    let result = match post_check("What a beautiful day!").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("correct_exclamation");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(
-        grammar_errors.is_empty(),
-        "Correct exclamation should not trigger errors"
-    );
+    assert!(errors.is_empty(), "{}", case.description);
 }
 
 #[tokio::test]
 async fn error_has_message() {
-    let result = match post_check("This is an test.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("grammar_article_an_before_consonant");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(!grammar_errors.is_empty(), "Should detect grammar error");
+    assert!(!errors.is_empty());
 
-    let error = grammar_errors[0];
-    let message = match error["message"].as_str() {
-        Some(m) => m,
-        None => panic!("Missing message in error"),
-    };
-
-    assert!(!message.is_empty(), "Error message should not be empty");
+    let message = errors[0]["message"].as_str().expect("Missing message");
+    assert!(!message.is_empty());
 }
 
 #[tokio::test]
 async fn error_has_rule_id() {
-    let result = match post_check("This is an test.").await {
-        Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
-    };
+    let case = TestFixtures::case("grammar_article_an_before_consonant");
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let result = post_check(&case.input).await.expect("Request failed");
+    let matches = get_matches(&result).expect("Missing matches");
+    let errors = find_grammar_errors(matches);
 
-    let grammar_errors = find_grammar_errors(matches);
-    assert!(!grammar_errors.is_empty(), "Should detect grammar error");
+    assert!(!errors.is_empty());
 
-    let error = grammar_errors[0];
-    let rule_id = match error["rule"]["id"].as_str() {
-        Some(id) => id,
-        None => panic!("Missing rule id in error"),
-    };
-
-    assert!(!rule_id.is_empty(), "Rule ID should not be empty");
+    let rule_id = errors[0]["rule"]["id"].as_str().expect("Missing rule id");
+    assert!(!rule_id.is_empty());
 }

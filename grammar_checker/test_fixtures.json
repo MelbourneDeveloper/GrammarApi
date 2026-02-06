@@ -1,0 +1,187 @@
+{
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "grammar_article_an_before_consonant",
+      "description": "Detects incorrect 'an' before consonant sound",
+      "input": "This is an test.",
+      "expectedErrors": [
+        {
+          "category": "grammar",
+          "offset": 8,
+          "length": 2,
+          "errorText": "an",
+          "replacements": ["a"]
+        }
+      ]
+    },
+    {
+      "id": "grammar_article_a_before_vowel",
+      "description": "Detects incorrect 'a' before vowel sound",
+      "input": "I saw a elephant.",
+      "expectedErrors": [
+        {
+          "category": "grammar",
+          "offset": 6,
+          "length": 1,
+          "errorText": "a",
+          "replacements": ["an"]
+        }
+      ]
+    },
+    {
+      "id": "grammar_repeated_word",
+      "description": "Detects repeated words",
+      "input": "The the cat sat on the mat.",
+      "expectedErrors": [
+        {
+          "category": "grammar",
+          "minCount": 1
+        }
+      ]
+    },
+    {
+      "id": "spelling_simple_misspelling",
+      "description": "Detects simple misspelling",
+      "input": "This has a speling mistake.",
+      "expectedErrors": [
+        {
+          "category": "spelling",
+          "offset": 11,
+          "length": 7,
+          "errorText": "speling",
+          "replacements": ["spelling"]
+        }
+      ]
+    },
+    {
+      "id": "spelling_multiple_errors",
+      "description": "Detects multiple spelling errors",
+      "input": "The quik brwon fox jumps ovar the lazzy dog.",
+      "expectedErrors": [
+        { "category": "spelling", "minCount": 3 }
+      ]
+    },
+    {
+      "id": "spelling_common_typo_receive",
+      "description": "Detects common typo 'recieved'",
+      "input": "I recieved your message.",
+      "expectedErrors": [
+        {
+          "category": "spelling",
+          "errorText": "recieved",
+          "replacements": ["received"]
+        }
+      ]
+    },
+    {
+      "id": "spelling_transposed_letters",
+      "description": "Detects transposed letters",
+      "input": "Teh cat sat on teh mat.",
+      "expectedErrors": [
+        { "category": "spelling", "minCount": 2 }
+      ]
+    },
+    {
+      "id": "spelling_missing_letters",
+      "description": "Detects missing letters",
+      "input": "The governmnt made an announcment.",
+      "expectedErrors": [
+        { "category": "spelling", "minCount": 2 }
+      ]
+    },
+    {
+      "id": "spelling_extra_letters",
+      "description": "Detects extra letters",
+      "input": "This is definately wrong.",
+      "expectedErrors": [
+        {
+          "category": "spelling",
+          "errorText": "definately",
+          "replacements": ["definitely"]
+        }
+      ]
+    },
+    {
+      "id": "spelling_doubled_letters",
+      "description": "Detects doubled letter errors",
+      "input": "I have a beautifull garden.",
+      "expectedErrors": [
+        {
+          "category": "spelling",
+          "errorText": "beautifull",
+          "replacements": ["beautiful"]
+        }
+      ]
+    },
+    {
+      "id": "mixed_grammar_and_spelling",
+      "description": "Detects both grammar and spelling errors",
+      "input": "This is an test with speling errors.",
+      "expectedErrors": [
+        { "category": "grammar", "errorText": "an", "replacements": ["a"] },
+        { "category": "spelling", "errorText": "speling", "replacements": ["spelling"] }
+      ]
+    },
+    {
+      "id": "correct_sentence",
+      "description": "No errors for correct sentence",
+      "input": "This is a correct sentence.",
+      "expectedErrors": []
+    },
+    {
+      "id": "correct_pangram",
+      "description": "No errors for correct pangram",
+      "input": "The quick brown fox jumps over the lazy dog.",
+      "expectedErrors": []
+    },
+    {
+      "id": "correct_articles",
+      "description": "No errors for correct article usage",
+      "input": "This is a test and an example.",
+      "expectedErrors": []
+    },
+    {
+      "id": "correct_question",
+      "description": "No errors for correct question",
+      "input": "What is an apple?",
+      "expectedErrors": []
+    },
+    {
+      "id": "correct_exclamation",
+      "description": "No errors for correct exclamation",
+      "input": "What a beautiful day!",
+      "expectedErrors": []
+    },
+    {
+      "id": "correct_proper_nouns",
+      "description": "No errors for proper nouns",
+      "input": "John went to London with Mary.",
+      "expectedErrors": []
+    },
+    {
+      "id": "correct_contractions",
+      "description": "No errors for contractions",
+      "input": "I can't believe it's not butter.",
+      "expectedErrors": []
+    },
+    {
+      "id": "correct_hyphenated",
+      "description": "No errors for hyphenated words",
+      "input": "This is a well-known fact.",
+      "expectedErrors": []
+    },
+    {
+      "id": "empty_text",
+      "description": "No errors for empty text",
+      "input": "",
+      "expectedErrors": []
+    },
+    {
+      "id": "whitespace_only",
+      "description": "No errors for whitespace only",
+      "input": "   ",
+      "expectedErrors": []
+    }
+  ]
+}

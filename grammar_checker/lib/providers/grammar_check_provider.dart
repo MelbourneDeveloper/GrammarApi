@@ -53,7 +53,6 @@ class GrammarCheckProvider extends ChangeNotifier {
   String _text;
   List<GrammarMatch> _matches = [];
   String? _errorMessage;
-  int? _processingTimeMs;
 
   /// Current state of the check operation.
   CheckState get state => _state;
@@ -66,9 +65,6 @@ class GrammarCheckProvider extends ChangeNotifier {
 
   /// Error message if the check failed.
   String? get errorMessage => _errorMessage;
-
-  /// Processing time in milliseconds.
-  int? get processingTimeMs => _processingTimeMs;
 
   /// Whether any errors were found.
   bool get hasErrors => _matches.isNotEmpty;
@@ -109,7 +105,6 @@ class GrammarCheckProvider extends ChangeNotifier {
     switch (result) {
       case Success(:final value):
         _matches = value.matches;
-        _processingTimeMs = value.processingTimeMs;
         _state = CheckState.success;
       case Error(:final error):
         _errorMessage = error;

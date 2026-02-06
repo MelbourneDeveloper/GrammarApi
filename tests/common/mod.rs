@@ -1,5 +1,10 @@
 #![allow(dead_code)]
 
+pub mod fixtures;
+
+#[allow(unused_imports)]
+pub use fixtures::TestFixtures;
+
 use axum::{
     body::Body,
     http::{Request, StatusCode},
