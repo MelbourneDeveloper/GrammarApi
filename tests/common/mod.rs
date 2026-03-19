@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![expect(dead_code)]
 
 pub mod fixtures;
 
@@ -29,22 +29,22 @@ pub async fn post_check(text: &str) -> Result<Value, String> {
         .body(Body::from(json!({ "text": text }).to_string()))
     {
         Ok(req) => req,
-        Err(e) => return Err(format!("Failed to build request: {}", e)),
+        Err(e) => return Err(format!("Failed to build request: {e}")),
     };
 
     let response = match app.oneshot(request).await {
         Ok(resp) => resp,
-        Err(e) => return Err(format!("Request failed: {}", e)),
+        Err(e) => return Err(format!("Request failed: {e}")),
     };
 
     let body = match response.into_body().collect().await {
         Ok(collected) => collected.to_bytes(),
-        Err(e) => return Err(format!("Failed to read body: {}", e)),
+        Err(e) => return Err(format!("Failed to read body: {e}")),
     };
 
     match serde_json::from_slice(&body) {
         Ok(json) => Ok(json),
-        Err(e) => Err(format!("Failed to parse JSON: {}", e)),
+        Err(e) => Err(format!("Failed to parse JSON: {e}")),
     }
 }
 
@@ -57,24 +57,24 @@ pub async fn get_health() -> Result<(StatusCode, String), String> {
         .body(Body::empty())
     {
         Ok(req) => req,
-        Err(e) => return Err(format!("Failed to build request: {}", e)),
+        Err(e) => return Err(format!("Failed to build request: {e}")),
     };
 
     let response = match app.oneshot(request).await {
         Ok(resp) => resp,
-        Err(e) => return Err(format!("Request failed: {}", e)),
+        Err(e) => return Err(format!("Request failed: {e}")),
     };
 
     let status = response.status();
 
     let body = match response.into_body().collect().await {
         Ok(collected) => collected.to_bytes(),
-        Err(e) => return Err(format!("Failed to read body: {}", e)),
+        Err(e) => return Err(format!("Failed to read body: {e}")),
     };
 
     let text = match String::from_utf8(body.to_vec()) {
         Ok(s) => s,
-        Err(e) => return Err(format!("Invalid UTF-8: {}", e)),
+        Err(e) => return Err(format!("Invalid UTF-8: {e}")),
     };
 
     Ok((status, text))
@@ -99,9 +99,7 @@ pub fn find_grammar_errors(matches: &[Value]) -> Vec<&Value> {
 }
 
 pub fn has_replacement(error: &Value, expected: &str) -> bool {
-    if let Some(replacements) = error["replacements"].as_array() {
-        replacements.iter().any(|r| r.as_str() == Some(expected))
-    } else {
-        false
-    }
+    error["replacements"]
+        .as_array()
+        .is_some_and(|replacements| replacements.iter().any(|r| r.as_str() == Some(expected)))
 }

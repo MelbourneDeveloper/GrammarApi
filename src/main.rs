@@ -11,7 +11,7 @@ async fn main() {
 
     let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
-    let addr = format!("{}:{}", host, port);
+    let addr = format!("{host}:{port}");
 
     tracing::info!("Loading dictionary...");
     let app = create_app();
