@@ -1,6 +1,6 @@
 //! Shared test fixtures loader.
 
-#![allow(clippy::expect_used)]
+#![expect(clippy::expect_used)]
 
 use serde::Deserialize;
 use std::fs;
@@ -45,7 +45,7 @@ impl TestFixtures {
             .cases
             .into_iter()
             .find(|c| c.id == id)
-            .unwrap_or_else(|| panic!("Missing fixture: {}", id))
+            .unwrap_or_else(|| panic!("Missing fixture: {id}"))
     }
 
     pub fn get_case(&self, id: &str) -> Option<&TestCase> {

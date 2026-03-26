@@ -182,7 +182,8 @@ async fn check_text(
     let parser = PlainEnglish;
     let document = Document::new_curated(&payload.text, &parser);
 
-    let mut linter = LintGroup::new_curated(state.dictionary.clone(), Dialect::American);
+    let mut linter = LintGroup::new_curated(state.dictionary, Dialect::American);
+    linter.set_all_rules_to(Some(true));
     let lints = linter.lint(&document);
 
     let matches: Vec<Match> = lints
@@ -223,11 +224,13 @@ async fn check_text(
 
     let elapsed = start.elapsed();
     let elapsed_ms = elapsed.as_millis();
+    let elapsed_secs_f64 = elapsed.as_secs_f64();
 
     // Record metrics
     counter!("api.requests", "endpoint" => "check").increment(1);
-    histogram!("api.request_duration_ms", "endpoint" => "check").record(elapsed_ms as f64);
-    counter!("api.matches_found").increment(matches.len() as u64);
+    histogram!("api.request_duration_ms", "endpoint" => "check").record(elapsed_secs_f64 * 1000.0);
+    let match_count: u64 = matches.len().try_into().unwrap_or(u64::MAX);
+    counter!("api.matches_found").increment(match_count);
 
     let response = CheckResponse {
         matches,
@@ -397,7 +400,7 @@ fn create_app_internal(enable_rate_limiting: bool) -> Router {
     router
         .layer(PropagateRequestIdLayer::new(x_request_id.clone()))
         .layer(SetRequestIdLayer::new(
-            x_request_id.clone(),
+            x_request_id,
             MakeRequestUuid,
         ))
         .layer(TraceLayer::new_for_http().make_span_with(|request: &Request<_>| {

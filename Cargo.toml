@@ -35,6 +35,7 @@ http = "1"
 [dev-dependencies]
 http-body-util = "0.1"
 hyper = "1"
+reqwest = { version = "0.12", features = ["json"] }
 
 [lints.rust]
 # ALL ERRORS - NO WARNINGS
@@ -84,6 +85,9 @@ pedantic = { level = "deny", priority = -1 }
 nursery = { level = "deny", priority = -1 }
 cargo = { level = "deny", priority = -1 }
 
+# Transitive dependency version conflicts — not fixable without upstream changes
+multiple_crate_versions = "allow"
+
 # Dangerous patterns - ERRORS
 unwrap_used = "deny"
 expect_used = "deny"
@@ -97,46 +101,57 @@ mem_forget = "deny"
 # Code quality - ERRORS
 fn_params_excessive_bools = "deny"
 
-# Allow some that are too strict for this project
-multiple_crate_versions = "allow"
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
-module_name_repetitions = "allow"
-must_use_candidate = "allow"
-struct_excessive_bools = "allow"
-doc_markdown = "allow"
-redundant_pub_crate = "allow"
-significant_drop_tightening = "allow"
-missing_const_for_fn = "allow"
-unused_self = "allow"
-uninlined_format_args = "allow"
-unnecessary_wraps = "allow"
-option_if_let_else = "allow"
-redundant_closure_for_method_calls = "allow"
-similar_names = "allow"
-match_same_arms = "allow"
-items_after_statements = "allow"
-string_lit_as_bytes = "allow"
-needless_raw_string_hashes = "allow"
-non_ascii_literal = "allow"
-suboptimal_flops = "allow"
-iter_without_into_iter = "allow"
-into_iter_without_iter = "allow"
-too_many_arguments = "allow"
-needless_pass_by_value = "allow"
-redundant_clone = "allow"
-trivially_copy_pass_by_ref = "allow"
-unnecessary_map_or = "allow"
-field_reassign_with_default = "allow"
-cast_precision_loss = "allow"
-cast_possible_truncation = "allow"
-cast_sign_loss = "allow"
-cast_lossless = "allow"
-or_fun_call = "allow"
-too_many_lines = "allow"
-redundant_closure = "allow"
-format_collect = "allow"
-cognitive_complexity = "allow"
-match_wildcard_for_single_variants = "allow"
-string_add_assign = "allow"
-if_not_else = "allow"
+[workspace.lints.rust]
+unsafe_code  = "deny"
+missing_docs = "deny"
+unused_imports = "deny"
+dead_code = "deny"
+unused_variables = "deny"
+unused_mut = "deny"
+unused_assignments = "deny"
+unused_results = "deny"
+# Stale #[expect] attributes must be errors, not warnings — no dead suppressions
+unfulfilled_lint_expectations = "deny"
+
+[workspace.lints.clippy]
+# all + pedantic at maximum — restriction & nursery cherry-picked (contain contradictions)
+all                  = { level = "deny", priority = -1 }
+pedantic             = { level = "deny", priority = -1 }
+unwrap_used          = "deny"
+expect_used          = "deny"
+panic                = "deny"
+todo                 = "deny"
+unimplemented        = "deny"
+# Implicit panics from out-of-bounds indexing — use .get() instead
+indexing_slicing     = "deny"
+# Silent lossy type conversions via `as` — use .into()/.try_into() instead
+as_conversions       = "deny"
+# Forgotten debug macros leaking info to stderr
+dbg_macro            = "deny"
+# Resource leaks from skipped destructors — use ManuallyDrop if needed
+mem_forget           = "deny"
+# From impls that can panic should be TryFrom instead
+fallible_impl_from   = "deny"
+# Catch needless implicit clones — use .clone() for explicit intent
+implicit_clone       = "deny"
+# Require SAFETY comments on any unsafe block — defense in depth for allowed exceptions
+undocumented_unsafe_blocks = "deny"
+# Prevent silent precision loss in float literals — critical for numeric type correctness
+lossy_float_literal  = "deny"
+# Prevent stack overflow from oversized local variables — critical for recursive AST walking
+large_stack_frames   = "deny"
+# Force #[expect] over #[allow] so stale lint suppressions don't hide new violations
+allow_attributes     = "deny"
+too_many_lines       = "deny"
+too_many_arguments   = "deny"
+cast_possible_truncation = "deny"
+# Catch accidental infinite loops — require `-> !` return type for intentional ones
+infinite_loop        = "deny"
+# Prevent silent error cause discarding in .map_err(|_| ...) — preserve error provenance
+map_err_ignore       = "deny"
+# Prevent process::exit() — use proper error propagation, exit only via main() return
+exit                 = "deny"
+# Catch struct destructures that silently ignore new fields — critical during refactoring
+rest_pat_in_fully_bound_structs = "deny"
+# Require Arc::clone(&x) syntax — make ref-counted pointer cloning visually distinct
+clone_on_ref_ptr     = "deny"

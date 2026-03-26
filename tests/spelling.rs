@@ -1,6 +1,6 @@
 //! Spelling tests for the grammar API using shared fixtures.
 
-#![allow(clippy::panic, clippy::manual_let_else, clippy::expect_used)]
+#![expect(clippy::panic, clippy::expect_used)]
 
 mod common;
 

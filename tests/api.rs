@@ -1,6 +1,6 @@
 //! API tests for the grammar API.
 
-#![allow(clippy::panic, clippy::manual_let_else)]
+#![expect(clippy::panic)]
 
 mod common;
 
@@ -11,7 +11,7 @@ use common::{get_health, get_matches, post_check};
 async fn health_endpoint_returns_ok() {
     let (status, body) = match get_health().await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
     assert_eq!(status, StatusCode::OK, "Health should return 200");
@@ -22,7 +22,7 @@ async fn health_endpoint_returns_ok() {
 async fn check_endpoint_returns_matches_array() {
     let result = match post_check("Test text.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
     assert!(
@@ -35,7 +35,7 @@ async fn check_endpoint_returns_matches_array() {
 async fn check_endpoint_returns_metrics() {
     let result = match post_check("Test text.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
     assert!(
@@ -48,7 +48,7 @@ async fn check_endpoint_returns_metrics() {
 async fn metrics_contains_processing_time() {
     let result = match post_check("Test text.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
     assert!(
@@ -61,18 +61,16 @@ async fn metrics_contains_processing_time() {
 async fn processing_time_is_reasonable() {
     let result = match post_check("This is a simple test sentence.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let time = match result["metrics"]["processingTimeMs"].as_u64() {
-        Some(t) => t,
-        None => panic!("Missing processingTimeMs"),
-    };
+    let time = result["metrics"]["processingTimeMs"]
+        .as_u64()
+        .unwrap_or_else(|| panic!("Missing processingTimeMs"));
 
     assert!(
         time < 1000,
-        "Processing time should be under 1 second, was {}ms",
-        time
+        "Processing time should be under 1 second, was {time}ms"
     );
 }
 
@@ -80,13 +78,11 @@ async fn processing_time_is_reasonable() {
 async fn error_has_context_text() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -101,13 +97,11 @@ async fn error_has_context_text() {
 async fn error_has_context_offset() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -122,13 +116,11 @@ async fn error_has_context_offset() {
 async fn error_has_context_length() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -143,13 +135,11 @@ async fn error_has_context_length() {
 async fn error_has_rule_object() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -161,13 +151,11 @@ async fn error_has_rule_object() {
 async fn rule_has_id() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -179,13 +167,11 @@ async fn rule_has_id() {
 async fn rule_has_category() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -200,24 +186,20 @@ async fn rule_has_category() {
 async fn category_is_valid_value() {
     let result = match post_check("This is an test with speling erors.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     for error in matches {
-        let category = match error["rule"]["category"].as_str() {
-            Some(c) => c,
-            None => panic!("Missing category"),
-        };
+        let category = error["rule"]["category"]
+            .as_str()
+            .unwrap_or_else(|| panic!("Missing category"));
 
         assert!(
             category == "spelling" || category == "grammar",
-            "Category should be 'spelling' or 'grammar', got '{}'",
-            category
+            "Category should be 'spelling' or 'grammar', got '{category}'"
         );
     }
 }
@@ -226,13 +208,11 @@ async fn category_is_valid_value() {
 async fn error_has_replacements_array() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -247,13 +227,11 @@ async fn error_has_replacements_array() {
 async fn error_has_offset() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -265,13 +243,11 @@ async fn error_has_offset() {
 async fn error_has_length() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
@@ -283,13 +259,11 @@ async fn error_has_length() {
 async fn error_has_message() {
     let result = match post_check("This is an test.").await {
         Ok(r) => r,
-        Err(e) => panic!("Request failed: {}", e),
+        Err(e) => panic!("Request failed: {e}"),
     };
 
-    let matches = match get_matches(&result) {
-        Some(m) => m,
-        None => panic!("Response missing matches array"),
-    };
+    let matches =
+        get_matches(&result).unwrap_or_else(|| panic!("Response missing matches array"));
 
     assert!(!matches.is_empty(), "Should have at least one match");
 
